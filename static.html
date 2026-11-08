@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HALFLIGHT Poster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --red:#3d6bff; --white:#f2f0ea; --bg:#040404; }
+  html, body { margin:0; height:100%; background:#000; overflow:hidden; }
+  #poster {
+    position:absolute; left:50%; top:50%; width:1080px; height:1350px;
+    background:var(--bg); overflow:hidden; transform-origin:center;
+    font-family:'JetBrains Mono', monospace; color:var(--white);
+  }
+  body.export #poster { left:0; top:0; transform:none !important; }
+  svg.fx { position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  .mono { text-transform:uppercase; letter-spacing:.14em; }
+  .top { position:absolute; left:48px; right:48px; top:42px; display:flex; justify-content:space-between; font-size:19px; }
+  .top b { color:var(--red); font-weight:800; }
+  .rule { position:absolute; left:48px; right:48px; height:1px; background:rgba(242,240,234,.22); }
+
+  .src-label { position:absolute; font-size:14px; opacity:.75; }
+
+  .side { position:absolute; top:50%; font-size:13px; opacity:.55; white-space:nowrap; }
+  .side.l { left:22px; transform:translate(-50%,-50%) rotate(-90deg); transform-origin:center; margin-left:8px; }
+  .side.r { right:22px; transform:translate(50%,-50%) rotate(90deg); margin-right:8px; }
+
+  .title { position:absolute; left:40px; right:40px; top:735px; height:250px; }
+  .title span {
+    position:absolute; left:0; top:0; white-space:nowrap;
+    font-family:'Anton', sans-serif; line-height:.86; text-transform:uppercase; letter-spacing:-.005em;
+  }
+  .title .ghost { color:var(--red); transform:translate(-6px,3px); mix-blend-mode:screen; opacity:.85; filter:blur(.6px); }
+  .title .slice { color:var(--white); }
+  .title .slice.hot { color:var(--red); }
+
+  .sub { position:absolute; left:48px; right:48px; top:1028px; display:flex; justify-content:space-between; align-items:baseline; }
+  .sub .big { font-weight:800; font-size:40px; letter-spacing:.32em; }
+  .sub .small { font-size:17px; opacity:.8; }
+
+  .grid { position:absolute; left:48px; right:48px; top:1102px; display:grid; grid-template-columns:1fr 1fr 1.15fr; border-top:1px solid rgba(242,240,234,.3); }
+  .grid > div { padding:16px 0 0; border-right:1px solid rgba(242,240,234,.18); padding-left:18px; }
+  .grid > div:first-child { padding-left:0; }
+  .grid > div:last-child { border-right:0; }
+  .grid .k { font-size:14px; color:var(--red); font-weight:700; }
+  .grid .v { font-size:36px; font-weight:800; line-height:1.08; margin-top:10px; letter-spacing:.02em; }
+
+  .bar {
+    position:absolute; left:0; right:0; bottom:0; height:78px; background:var(--red); color:#050505;
+    display:flex; align-items:center; justify-content:space-between; padding:0 48px; box-sizing:border-box;
+    font-weight:800; font-size:24px;
+  }
+  .bar .arrow { font-size:30px; letter-spacing:0; }
+
+  .reg { position:absolute; width:22px; height:22px; opacity:.6; }
+  .reg::before, .reg::after { content:""; position:absolute; background:var(--white); }
+  .reg::before { left:10px; top:0; width:1px; height:22px; }
+  .reg::after { top:10px; left:0; height:1px; width:22px; }
+
+  .overlay { position:absolute; inset:0; pointer-events:none; }
+  .scan { background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); mix-blend-mode:multiply; }
+  .vignette { background:radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(0,0,0,.75) 100%); }
+</style>
+</head>
+<body>
+<div id="poster">
+  <svg class="fx" viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="smoke" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse">
+        <feTurbulence type="fractalNoise" baseFrequency="0.0032 0.0065" numOctaves="5" seed="11"/>
+        <feColorMatrix type="matrix" values="0 0 0 0 0.78  0 0 0 0 0.74  0 0 0 0 0.76  1.7 0 0 0 -0.66"/>
+      </filter>
+      <filter id="smokeLum" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse">
+        <feTurbulence type="fractalNoise" baseFrequency="0.0032 0.0065" numOctaves="5" seed="11"/>
+        <feColorMatrix type="matrix" values="2.4 0 0 0 -0.75  2.4 0 0 0 -0.75  2.4 0 0 0 -0.75  0 0 0 0 1"/>
+      </filter>
+      <mask id="smokeMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1350">
+        <rect width="1080" height="1350" filter="url(#smokeLum)"/>
+      </mask>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+      <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>
+      <filter id="flare" x="-50%" y="-500%" width="200%" height="1100%"><feGaussianBlur stdDeviation="6 2"/></filter>
+      <filter id="grain" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" seed="3"/>
+        <feColorMatrix type="saturate" values="0"/>
+      </filter>
+
+      <radialGradient id="fadeTop" gradientUnits="userSpaceOnUse" cx="540" cy="330" r="1200">
+        <stop offset="0" stop-color="#8fb0ff" stop-opacity="1"/>
+        <stop offset=".35" stop-color="#3d6bff" stop-opacity=".8"/>
+        <stop offset="1" stop-color="#3d6bff" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="fadeBL" gradientUnits="userSpaceOnUse" cx="-40" cy="1290" r="1100">
+        <stop offset="0" stop-color="#3d6bff" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#3d6bff" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="fadeBR" gradientUnits="userSpaceOnUse" cx="1120" cy="1290" r="1100">
+        <stop offset="0" stop-color="#3d6bff" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#3d6bff" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="haze" gradientUnits="userSpaceOnUse" cx="540" cy="360" r="760">
+        <stop offset="0" stop-color="#3d6bff" stop-opacity=".42"/>
+        <stop offset=".5" stop-color="#0a1a6e" stop-opacity=".18"/>
+        <stop offset="1" stop-color="#000" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="hot" gradientUnits="userSpaceOnUse" cx="540" cy="330" r="190">
+        <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+        <stop offset=".08" stop-color="#d9e4ff" stop-opacity="1"/>
+        <stop offset=".25" stop-color="#3d6bff" stop-opacity=".75"/>
+        <stop offset="1" stop-color="#3d6bff" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+        <stop offset=".55" stop-color="#000" stop-opacity="0"/>
+        <stop offset="1" stop-color="#000" stop-opacity=".85"/>
+      </linearGradient>
+    </defs>
+
+    <rect width="1080" height="1350" fill="#040404"/>
+    <rect width="1080" height="1350" fill="url(#haze)"/>
+
+    <!-- volumetric beams: visible where the smoke is dense -->
+    <g id="beamsGlow" filter="url(#glow)" mask="url(#smokeMask)"></g>
+    <g id="beamsMid" filter="url(#soft)" opacity=".55"></g>
+    <g id="beamsCore"></g>
+
+    <rect width="1080" height="1350" filter="url(#smoke)" opacity=".42" style="mix-blend-mode:screen"/>
+    <rect width="1080" height="1350" fill="url(#floor)"/>
+
+    <!-- light source -->
+    <circle cx="540" cy="330" r="190" fill="url(#hot)"/>
+    <ellipse cx="540" cy="330" rx="430" ry="3" fill="#d0deff" filter="url(#flare)" opacity=".9"/>
+    <ellipse cx="540" cy="330" rx="160" ry="1.2" fill="#fff"/>
+
+    <!-- crosshair -->
+    <g stroke="#f2f0ea" stroke-opacity=".35" stroke-width="1" fill="none">
+      <line x1="48" y1="330" x2="380" y2="330"/>
+      <line x1="700" y1="330" x2="1032" y2="330"/>
+      <circle cx="540" cy="330" r="64" stroke-dasharray="3 6"/>
+      <circle cx="540" cy="330" r="118" stroke-opacity=".18"/>
+    </g>
+
+    <rect width="1080" height="1350" filter="url(#grain)" opacity=".16" style="mix-blend-mode:overlay"/>
+  </svg>
+
+  <div class="overlay scan"></div>
+  <div class="overlay vignette"></div>
+
+  <div class="top mono"><span><b>■</b> HALFLIGHT / VOL. 03</span><span>WAREHOUSE NIGHT</span><span>21.03.2026</span></div>
+  <div class="rule" style="top:84px"></div>
+
+  <div class="src-label mono" style="left:48px; top:300px">SRC_01</div>
+  <div class="src-label mono" style="right:48px; top:300px; text-align:right">LUX: 12%</div>
+  <div class="src-label mono" style="left:48px; top:342px; opacity:.45">49.8397°N</div>
+  <div class="src-label mono" style="right:48px; top:342px; opacity:.45; text-align:right">24.0297°E</div>
+
+  <div class="side l mono">LVIV — UKRAINE — VOLUME THREE</div>
+  <div class="side r mono">HALF LIGHT — HALF LIGHT — HALF LIGHT</div>
+
+  <div class="title" id="title"></div>
+
+  <div class="sub"><span class="big">WAREHOUSE NIGHT</span><span class="small mono">CONCEPT / PORTFOLIO WORK</span></div>
+
+  <div class="grid mono">
+    <div><div class="k">01 / DATE</div><div class="v">21.03<br>2026</div></div>
+    <div><div class="k">02 / CITY</div><div class="v">LVIV<br><span style="opacity:.45">UA</span></div></div>
+    <div><div class="k">03 / SOUND</div><div class="v">INDUSTRIAL /<br>TECHNO</div></div>
+  </div>
+
+  <div class="bar mono"><span>TICKETS ON SALE NOW</span><span class="arrow">→</span></div>
+
+  <div class="reg" style="left:20px; top:20px"></div>
+  <div class="reg" style="right:20px; top:20px"></div>
+  <div class="reg" style="left:20px; bottom:96px"></div>
+  <div class="reg" style="right:20px; bottom:96px"></div>
+</div>
+
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 1080, H = 1350;
+  const poster = document.getElementById('poster');
+
+  if (location.search.includes('export')) document.body.classList.add('export');
+  function fit() {
+    if (document.body.classList.contains('export')) return;
+    const s = Math.min(innerWidth / W, innerHeight / H);
+    poster.style.transform = `translate(-50%,-50%) scale(${s})`;
+  }
+  addEventListener('resize', fit); fit();
+
+  // ---------- lasers ----------
+  const glow = document.getElementById('beamsGlow');
+  const mid = document.getElementById('beamsMid');
+  const core = document.getElementById('beamsCore');
+
+  function wedge(parent, ox, oy, ang, len, spread, fill) {
+    const ex = ox + Math.cos(ang) * len, ey = oy + Math.sin(ang) * len;
+    const nx = -Math.sin(ang) * spread, ny = Math.cos(ang) * spread;
+    const p = document.createElementNS(NS, 'polygon');
+    p.setAttribute('points', `${ox},${oy} ${ex + nx},${ey + ny} ${ex - nx},${ey - ny}`);
+    p.setAttribute('fill', fill);
+    parent.appendChild(p);
+  }
+  function line(parent, ox, oy, ang, len, stroke, w, op = 1) {
+    const l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', ox); l.setAttribute('y1', oy);
+    l.setAttribute('x2', ox + Math.cos(ang) * len); l.setAttribute('y2', oy + Math.sin(ang) * len);
+    l.setAttribute('stroke', stroke); l.setAttribute('stroke-width', w); l.setAttribute('stroke-opacity', op);
+    parent.appendChild(l);
+  }
+
+  // main fan from the light source
+  const O = { x: 540, y: 330 };
+  const N = 19;
+  for (let i = 0; i < N; i++) {
+    const t = i / (N - 1) - 0.5;
+    const ang = Math.PI / 2 + t * 2.35 + Math.sin(i * 7.3) * 0.02;
+    wedge(glow, O.x, O.y, ang, 1500, 26, 'url(#fadeTop)');
+    line(mid, O.x, O.y, ang, 1500, 'url(#fadeTop)', 5);
+    line(core, O.x, O.y, ang, 1500, 'url(#fadeTop)', 1.4);
+  }
+  // faint upward rays
+  for (let i = 0; i < 7; i++) {
+    const ang = -Math.PI / 2 + (i - 3) * 0.32;
+    wedge(glow, O.x, O.y, ang, 700, 14, 'url(#fadeTop)');
+    line(core, O.x, O.y, ang, 700, 'url(#fadeTop)', 0.8, 0.5);
+  }
+  // crossing beams from the floor corners
+  [[-40, 1290, 'url(#fadeBL)', -1], [1120, 1290, 'url(#fadeBR)', 1]].forEach(([x, y, f, side]) => {
+    for (let i = 0; i < 6; i++) {
+      const base = side < 0 ? -Math.PI / 4 : -3 * Math.PI / 4;
+      const ang = base + side * (i - 2.5) * 0.075;
+      wedge(glow, x, y, ang, 1600, 14, f);
+      line(core, x, y, ang, 1600, f, 1, 0.75);
+    }
+  });
+
+  // ---------- glitched title ----------
+  const title = document.getElementById('title');
+  const TEXT = 'HALFLIGHT';
+  // [from%, to%, dx, hot]
+  const slices = [
+    [0, 34, 0], [34, 39, 18], [39, 63, 0], [63, 66, -26, 1], [66, 100, 0]
+  ];
+  const ghost = document.createElement('span');
+  ghost.className = 'ghost'; ghost.textContent = TEXT; title.appendChild(ghost);
+  slices.forEach(([a, b, dx, hot]) => {
+    const s = document.createElement('span');
+    s.className = 'slice' + (hot ? ' hot' : '');
+    s.textContent = TEXT;
+    s.style.clipPath = `inset(${a}% -10% ${100 - b}% -10%)`;
+    s.style.transform = `translateX(${dx}px)`;
+    title.appendChild(s);
+  });
+
+  function fitTitle() {
+    const spans = title.querySelectorAll('span');
+    spans.forEach(s => s.style.fontSize = '100px');
+    const w = spans[1].getBoundingClientRect().width / (poster.getBoundingClientRect().width / W);
+    const size = 100 * 1000 / w;
+    spans.forEach(s => s.style.fontSize = size + 'px');
+  }
+  document.fonts.load('100px Anton').then(() => document.fonts.ready).then(fitTitle);
+})();
+</script>
+</body>
+</html>

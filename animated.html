@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HALFLIGHT Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --red:#3d6bff; --white:#f2f0ea; --bg:#040404; }
+  html, body { margin:0; height:100%; background:#000; overflow:hidden; }
+  #poster {
+    position:absolute; left:50%; top:50%; width:1080px; height:1920px;
+    background:var(--bg); overflow:hidden; transform-origin:center;
+    font-family:'JetBrains Mono', monospace; color:var(--white);
+  }
+  body.export #poster { left:0; top:0; transform:none !important; }
+  #stage { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #shake { position:absolute; inset:0; }
+
+  .mono { text-transform:uppercase; letter-spacing:.14em; }
+  .top { position:absolute; left:52px; right:52px; top:56px; display:flex; justify-content:space-between; font-size:22px; }
+  .top b { color:var(--red); font-weight:800; }
+  .rule { position:absolute; left:52px; right:52px; height:1px; background:rgba(242,240,234,.22); }
+
+  .status { position:absolute; left:52px; top:130px; font-size:20px; display:flex; gap:18px; align-items:center; }
+  .status .dot { width:14px; height:14px; background:var(--red); border-radius:50%; box-shadow:0 0 18px var(--red); animation:blink 1s steps(2) infinite; }
+  .status .meter { display:flex; gap:5px; }
+  .status .meter i { width:8px; height:22px; background:rgba(242,240,234,.18); display:block; }
+  .status .meter i.on { background:var(--white); }
+  @keyframes blink { 50% { opacity:0; } }
+
+  .src-label { position:absolute; font-size:16px; opacity:.75; }
+
+  .side { position:absolute; top:50%; font-size:15px; opacity:.5; white-space:nowrap; }
+  .side.l { left:24px; transform:translate(-50%,-50%) rotate(-90deg); margin-left:8px; }
+  .side.r { right:24px; transform:translate(50%,-50%) rotate(90deg); margin-right:8px; }
+
+  .title { position:absolute; left:44px; right:44px; top:1130px; height:270px; }
+  .title span {
+    position:absolute; left:0; top:0; white-space:nowrap; will-change:transform;
+    font-family:'Anton', sans-serif; line-height:.86; text-transform:uppercase; letter-spacing:-.005em;
+  }
+  .title .ghost { color:var(--red); mix-blend-mode:screen; opacity:.85; filter:blur(.6px); }
+  .title .slice.hot { color:var(--red); }
+
+  .sub { position:absolute; left:52px; right:52px; top:1420px; display:flex; justify-content:space-between; align-items:baseline; }
+  .sub .big { font-weight:800; font-size:46px; letter-spacing:.32em; }
+  .sub .small { font-size:19px; opacity:.8; }
+
+  .grid { position:absolute; left:52px; right:52px; top:1510px; display:grid; grid-template-columns:1fr 1fr 1.15fr; border-top:1px solid rgba(242,240,234,.3); }
+  .grid > div { padding:20px 0 0 20px; border-right:1px solid rgba(242,240,234,.18); }
+  .grid > div:first-child { padding-left:0; }
+  .grid > div:last-child { border-right:0; }
+  .grid .k { font-size:16px; color:var(--red); font-weight:700; }
+  .grid .v { font-size:38px; font-weight:800; line-height:1.08; margin-top:12px; letter-spacing:.02em; }
+
+  .ticker {
+    position:absolute; left:0; right:0; bottom:120px; height:96px; background:var(--red); color:#050505;
+    overflow:hidden; display:flex; align-items:center; font-weight:800; font-size:34px;
+  }
+  .ticker .track { display:flex; white-space:nowrap; animation:tick 9s linear infinite; }
+  .ticker .track span { padding-right:40px; }
+  @keyframes tick { to { transform:translateX(-50%); } }
+
+  .foot { position:absolute; left:52px; right:52px; bottom:48px; display:flex; justify-content:space-between; font-size:18px; opacity:.7; }
+
+  .reg { position:absolute; width:24px; height:24px; opacity:.6; }
+  .reg::before, .reg::after { content:""; position:absolute; background:var(--white); }
+  .reg::before { left:11px; top:0; width:1px; height:24px; }
+  .reg::after { top:11px; left:0; height:1px; width:24px; }
+
+  .overlay { position:absolute; inset:0; pointer-events:none; }
+  .scan { background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); mix-blend-mode:multiply; }
+  .vignette { background:radial-gradient(ellipse at 50% 38%, transparent 45%, rgba(0,0,0,.78) 100%); }
+  .grain { inset:-50%; opacity:.14; mix-blend-mode:overlay; animation:grain .5s steps(6) infinite; }
+  @keyframes grain {
+    0% { transform:translate(0,0); } 20% { transform:translate(-7%,4%); } 40% { transform:translate(5%,-6%); }
+    60% { transform:translate(-3%,8%); } 80% { transform:translate(8%,2%); } 100% { transform:translate(0,0); }
+  }
+  #flash { background:#fff; opacity:0; mix-blend-mode:overlay; }
+  #bars { opacity:0; display:flex; }
+  #bars i { flex:1; display:block; }
+
+  .hint { position:fixed; left:12px; bottom:10px; font:12px 'JetBrains Mono', monospace; color:#666; }
+  body.export .hint { display:none; }
+</style>
+</head>
+<body>
+<div id="poster">
+  <canvas id="stage" width="540" height="960"></canvas>
+
+  <div id="shake">
+    <div class="top mono"><span><b>■</b> HALFLIGHT / VOL. 03</span><span>21.03.2026</span></div>
+    <div class="rule" style="top:104px"></div>
+    <div class="status mono"><span class="dot"></span><span id="statusText">LOW LIGHT</span><span class="meter" id="meter"><i></i><i></i><i></i><i></i><i></i></span></div>
+
+    <div class="src-label mono" style="left:52px; top:576px">SRC_01</div>
+    <div class="src-label mono" style="right:52px; top:576px; text-align:right">INDUSTRIAL / TECHNO</div>
+    <div class="src-label mono" style="left:52px; top:624px; opacity:.45">49.8397°N</div>
+    <div class="src-label mono" style="right:52px; top:624px; opacity:.45; text-align:right">24.0297°E</div>
+
+    <div class="side l mono">LVIV — UKRAINE — VOLUME THREE</div>
+    <div class="side r mono">HALF LIGHT — HALF LIGHT — HALF LIGHT</div>
+
+    <div class="title" id="title"></div>
+
+    <div class="sub"><span class="big">WAREHOUSE NIGHT</span><span class="small mono">CONCEPT / PORTFOLIO</span></div>
+
+    <div class="grid mono">
+      <div><div class="k">01 / DATE</div><div class="v">21.03<br>2026</div></div>
+      <div><div class="k">02 / CITY</div><div class="v">LVIV<br><span style="opacity:.45">UA</span></div></div>
+      <div><div class="k">03 / SOUND</div><div class="v">INDUSTRIAL /<br>TECHNO</div></div>
+    </div>
+  </div>
+
+  <div class="ticker mono"><div class="track" id="track"></div></div>
+  <div class="foot mono"><span>LINK IN BIO</span><span>CONCEPT ARTWORK</span></div>
+
+  <div class="reg" style="left:22px; top:22px"></div>
+  <div class="reg" style="right:22px; top:22px"></div>
+  <div class="reg" style="left:22px; bottom:236px"></div>
+  <div class="reg" style="right:22px; bottom:236px"></div>
+
+  <div class="overlay scan"></div>
+  <div class="overlay vignette"></div>
+  <div class="overlay grain" id="grain"></div>
+  <div class="overlay" id="flash"></div>
+  <div class="overlay" id="bars"></div>
+</div>
+<div class="hint">space — pause · r — restart</div>
+
+<script>
+(() => {
+  const W = 1080, H = 1920, S = 0.5;           // canvas renders at half resolution
+  const CW = W * S, CH = H * S;
+  const BPM = 140, BEAT = 60 / BPM;
+  const poster = document.getElementById('poster');
+
+  if (location.search.includes('export')) document.body.classList.add('export');
+  if (window.self !== window.top) document.querySelector('.hint').style.display = 'none';
+  function fit() {
+    if (document.body.classList.contains('export')) return;
+    const s = Math.min(innerWidth / W, innerHeight / H);
+    poster.style.transform = `translate(-50%,-50%) scale(${s})`;
+  }
+  addEventListener('resize', fit); fit();
+
+  // deterministic RNG so every loop looks the same
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+  // ---------- ticker ----------
+  const phrase = ['TICKETS ON SALE', '✦', '21.03.2026', '✦', 'LVIV', '✦', 'INDUSTRIAL / TECHNO', '✦', 'HALFLIGHT VOL. 03', '✦'];
+  const track = document.getElementById('track');
+  for (let k = 0; k < 4; k++) phrase.forEach(p => { const s = document.createElement('span'); s.textContent = p; track.appendChild(s); });
+
+  // ---------- grain texture ----------
+  (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const g = c.getContext('2d'), img = g.createImageData(256, 256);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = Math.random() * 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    document.getElementById('grain').style.background = `url(${c.toDataURL()})`;
+  })();
+
+  // ---------- "no signal" colour bars (used on glitch frames) ----------
+  const bars = document.getElementById('bars');
+  ['#f2f0ea', '#9a9a9a', '#3d6bff', '#3a3a3a', '#f2f0ea', '#0a1a6e', '#111'].forEach(c => {
+    const i = document.createElement('i'); i.style.background = c; bars.appendChild(i);
+  });
+
+  // ---------- smoke texture ----------
+  const smoke = document.createElement('canvas');
+  smoke.width = CW; smoke.height = CH * 2;
+  (() => {
+    const g = smoke.getContext('2d');
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = 0; i < 70; i++) {
+        const x = rnd() * CW, y = rnd() * CH * 2, r = 40 + rnd() * 160;
+        const grd = g.createRadialGradient(x, y, 0, x, y, r);
+        const a = (pass ? 0.025 : 0.05) * (0.3 + rnd() * 1.4);
+        grd.addColorStop(0, `rgba(170,178,200,${a})`);
+        grd.addColorStop(1, 'rgba(170,178,200,0)');
+        g.fillStyle = grd; g.fillRect(x - r, y - r, r * 2, r * 2);
+        // wrap vertically so the texture tiles seamlessly
+        if (y < r) { g.save(); g.translate(0, CH * 2); g.fillRect(x - r, y - r, r * 2, r * 2); g.restore(); }
+        if (y > CH * 2 - r) { g.save(); g.translate(0, -CH * 2); g.fillRect(x - r, y - r, r * 2, r * 2); g.restore(); }
+      }
+    }
+  })();
+
+  // ---------- title ----------
+  const title = document.getElementById('title');
+  const TEXT = 'HALFLIGHT';
+  const sliceDefs = [
+    [0, 34, 0], [34, 39, 18], [39, 63, 0], [63, 66, -26, 1], [66, 100, 0]
+  ];
+  const ghost = document.createElement('span');
+  ghost.className = 'ghost'; ghost.textContent = TEXT; title.appendChild(ghost);
+  const slices = sliceDefs.map(([a, b, dx, hot]) => {
+    const s = document.createElement('span');
+    s.className = 'slice' + (hot ? ' hot' : '');
+    s.textContent = TEXT;
+    s.style.clipPath = `inset(${a}% -10% ${100 - b}% -10%)`;
+    title.appendChild(s);
+    return { el: s, dx };
+  });
+  function fitTitle() {
+    const spans = title.querySelectorAll('span');
+    spans.forEach(s => s.style.fontSize = '100px');
+    const w = spans[1].getBoundingClientRect().width / (poster.getBoundingClientRect().width / W);
+    spans.forEach(s => s.style.fontSize = (100 * 992 / w) + 'px');
+  }
+  document.fonts.load('100px Anton').then(() => document.fonts.ready).then(fitTitle);
+
+  // ---------- render ----------
+  const cv = document.getElementById('stage');
+  const ctx = cv.getContext('2d');
+  const flash = document.getElementById('flash');
+  const shake = document.getElementById('shake');
+  const statusText = document.getElementById('statusText');
+  const meterBars = [...document.querySelectorAll('#meter i')];
+  const O = { x: 540 * S, y: 600 * S };
+
+  function beam(ox, oy, ang, len, a, hue = 'red') {
+    const ex = ox + Math.cos(ang) * len, ey = oy + Math.sin(ang) * len;
+    const g = ctx.createLinearGradient(ox, oy, ex, ey);
+    const c = hue === 'white' ? '235,242,255' : '61,107,255';
+    g.addColorStop(0, `rgba(${c},${a})`);
+    g.addColorStop(0.55, `rgba(${c},${a * 0.45})`);
+    g.addColorStop(1, `rgba(${c},0)`);
+    ctx.strokeStyle = g;
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex, ey);
+    ctx.lineWidth = 9; ctx.globalAlpha = 0.12; ctx.stroke();
+    ctx.lineWidth = 3; ctx.globalAlpha = 0.35; ctx.stroke();
+    ctx.lineWidth = 0.9; ctx.globalAlpha = 1; ctx.stroke();
+  }
+
+  let paused = false, t0 = performance.now(), pauseAt = 0, glitchUntil = 0, nextGlitch = 2.2;
+  addEventListener('keydown', e => {
+    if (e.code === 'Space') { paused = !paused; if (paused) pauseAt = performance.now(); else t0 += performance.now() - pauseAt; }
+    if (e.key === 'r') { t0 = performance.now(); nextGlitch = 2.2; }
+  });
+
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (paused) return;
+    const t = (now - t0) / 1000;
+    const beatN = Math.floor(t / BEAT);
+    const ph = (t % BEAT) / BEAT;
+    const pulse = Math.exp(-ph * 5);
+    const bar = Math.floor(beatN / 16) % 3;        // laser scene changes every 4 bars
+
+    // background + haze
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#040404'; ctx.fillRect(0, 0, CW, CH);
+    const hz = ctx.createRadialGradient(O.x, O.y, 0, O.x, O.y, 420);
+    hz.addColorStop(0, `rgba(61,107,255,${0.25 + pulse * 0.25})`);
+    hz.addColorStop(0.5, 'rgba(10,26,110,0.12)');
+    hz.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = hz; ctx.fillRect(0, 0, CW, CH);
+
+    // smoke drifting upward in two layers
+    const sy1 = -((t * 14) % (CH * 2)), sy2 = -((t * 26 + 300) % (CH * 2));
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(smoke, 0, sy1); ctx.drawImage(smoke, 0, sy1 + CH * 2);
+    ctx.globalAlpha = 0.55;
+    ctx.save(); ctx.translate(CW, 0); ctx.scale(-1, 1);
+    ctx.drawImage(smoke, 0, sy2); ctx.drawImage(smoke, 0, sy2 + CH * 2);
+    ctx.restore();
+
+    // lasers
+    ctx.globalCompositeOperation = 'lighter';
+    const a = 0.35 + 0.65 * pulse;
+    const L = 1300;
+    if (bar === 0) {                                // breathing fan
+      const n = 17, spread = 2.0 + 0.5 * Math.sin(t * 0.7), base = Math.PI / 2 + 0.35 * Math.sin(t * 0.9);
+      for (let i = 0; i < n; i++) beam(O.x, O.y, base + spread * (i / (n - 1) - 0.5), L, a);
+    } else if (bar === 1) {                         // rotating star
+      const n = 14;
+      for (let i = 0; i < n; i++) beam(O.x, O.y, t * 0.8 + i * Math.PI * 2 / n, L, a * (i % 2 ? 0.6 : 1));
+    } else {                                        // scissor beams from the floor corners
+      const sw = 0.45 * Math.sin(t * 2.2);
+      for (let i = 0; i < 7; i++) {
+        beam(-10, CH + 10, -Math.PI / 4 + sw + (i - 3) * 0.07, L * 1.2, a);
+        beam(CW + 10, CH + 10, -3 * Math.PI / 4 - sw - (i - 3) * 0.07, L * 1.2, a);
+      }
+      for (let i = 0; i < 9; i++) beam(O.x, O.y, Math.PI / 2 + (i - 4) * 0.22, L, a * 0.5);
+    }
+    // white accent beams on every 4th beat
+    if (beatN % 4 === 0) {
+      for (let i = 0; i < 3; i++) beam(O.x, O.y, Math.PI / 2 + (i - 1) * 0.6 + Math.sin(t) * 0.2, L, pulse, 'white');
+    }
+
+    // light source
+    const r = 70 + pulse * 40;
+    const hot = ctx.createRadialGradient(O.x, O.y, 0, O.x, O.y, r);
+    hot.addColorStop(0, 'rgba(255,255,255,1)');
+    hot.addColorStop(0.1, 'rgba(215,228,255,1)');
+    hot.addColorStop(0.3, 'rgba(61,107,255,0.7)');
+    hot.addColorStop(1, 'rgba(61,107,255,0)');
+    ctx.globalAlpha = 1; ctx.fillStyle = hot; ctx.fillRect(O.x - r, O.y - r, r * 2, r * 2);
+    ctx.fillStyle = `rgba(210,225,255,${0.5 + pulse * 0.5})`;
+    ctx.fillRect(O.x - 220 - pulse * 60, O.y - 0.8, 440 + pulse * 120, 1.6);
+
+    // floor fade
+    ctx.globalCompositeOperation = 'source-over';
+    const fl = ctx.createLinearGradient(0, CH * 0.55, 0, CH);
+    fl.addColorStop(0, 'rgba(0,0,0,0)'); fl.addColorStop(1, 'rgba(0,0,0,0.85)');
+    ctx.fillStyle = fl; ctx.fillRect(0, 0, CW, CH);
+
+    // strobe: offbeat flashes in the last bar of every 8
+    const strobe = (beatN % 32) >= 28 && ph < 0.12;
+    flash.style.opacity = strobe ? 0.55 : pulse * 0.06;
+
+    // title: ghost follows the kick, slices glitch in bursts
+    if (t > nextGlitch) { glitchUntil = t + 0.35; nextGlitch = t + 2.5 + rnd() * 2.5; }
+    const glitching = t < glitchUntil;
+    ghost.style.transform = `translate(${-6 - pulse * 10}px, ${3 + pulse * 2}px)`;
+    slices.forEach(s => {
+      const dx = glitching ? s.dx * 1.6 + (rnd() - 0.5) * 120 : s.dx * (0.6 + pulse * 0.6);
+      s.el.style.transform = `translateX(${dx}px)`;
+    });
+    shake.style.transform = glitching && rnd() < 0.5 ? `translate(${(rnd() - 0.5) * 24}px, 0)` : '';
+    bars.style.opacity = glitching && rnd() < 0.18 ? 0.35 : 0;
+
+    // status readout
+    statusText.textContent = glitching ? 'BLACKOUT' : (beatN % 8 < 4 ? 'LOW LIGHT' : 'TICKETS ON SALE');
+    const lvl = glitching ? 0 : Math.round(pulse * 5);
+    meterBars.forEach((b, i) => b.classList.toggle('on', i < lvl));
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
